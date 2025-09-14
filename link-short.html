@@ -7,37 +7,20 @@
   <meta name="robots" content="noindex, nofollow">
   <style>
     /* Reset & base */
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html, body {
-      height: 100%;
-      font-family: "Inter", system-ui, sans-serif;
-      background: linear-gradient(135deg, #000, #222);
-      color: #f1f1f1;
-      -webkit-font-smoothing: antialiased;
-      text-rendering: optimizeLegibility;
-    }
-
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; font-family: "Inter", system-ui, sans-serif; background: linear-gradient(135deg, #000, #222); color: #f1f1f1; -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
     a { text-decoration: none; color: #0af; }
     button, input { font-family: inherit; border: none; outline: none; }
-
     .container { max-width: 600px; margin: 40px auto; padding: 16px; display: flex; flex-direction: column; gap: 20px; }
     .card { background: rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); padding:20px; border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,0.4); transition: transform 0.2s ease, box-shadow 0.2s ease; }
     .card:hover { transform: translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,0.5); }
     h1 { text-align:center; font-size:1.6rem; margin-bottom:10px; color:#fff; }
-
     .form { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
     .form input { padding:12px; border-radius:12px; background: rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.2); }
     .form input:focus { border-color:#0af; }
-
     .btn { padding:12px; border-radius:12px; font-weight:600; cursor:pointer; transition: background 0.2s ease, transform 0.2s ease; }
     .btn-primary { background:#0af; color:#000; border:1px solid #08c; }
     .btn-primary:hover { background:#09f; transform:translateY(-2px); }
-
     .result { margin-top:20px; padding:15px; border-radius:12px; background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); word-break: break-word; font-size:0.95rem; }
     .footer { margin-top:20px; padding:12px; text-align:center; font-size:0.8rem; color:#888; background: rgba(255,255,255,0.04); backdrop-filter: blur(8px); border-radius:16px; }
   </style>
@@ -60,7 +43,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDRQUnCtIZSpq4Jxed_4lwy9LYup37009c",
@@ -82,15 +65,21 @@
     // --- Generate One-Time Short Link ---
     form.addEventListener("submit", async (e) => {
       e.preventDefault();
-      const longUrl = document.getElementById("longUrl").value.trim();
+      let longUrl = document.getElementById("longUrl").value.trim();
       const minutes = parseInt(document.getElementById("expiryMinutes").value);
+
+      // ✅ Ensure full URL
+      if (!/^https?:\/\//i.test(longUrl)) {
+        longUrl = "https://" + longUrl;
+      }
+
       const token = Math.random().toString(36).substr(2, 6);
       const expiresAt = Date.now() + minutes * 60 * 1000;
 
       try {
         await setDoc(doc(linksCol, token), { longUrl, expiresAt, used: false });
 
-        // --- AUTO DELETE AFTER EXPIRY ---
+        // --- AUTO DELETE AFTER EXPIRY (fire-and-forget) ---
         setTimeout(async () => {
           try { await deleteDoc(doc(linksCol, token)); } 
           catch(err){ console.warn("Auto-delete failed:", err); }
@@ -120,16 +109,29 @@
         document.body.innerHTML = "<h2 style='text-align:center;color:#f44;'>❌ Invalid Link</h2>";
       } else {
         const data = snap.data();
+
+        // ✅ Expired
         if (Date.now() > data.expiresAt) {
           document.body.innerHTML = "<h2 style='text-align:center;color:#f44;'>❌ Link Expired</h2>";
           await deleteDoc(ref);
-        } else if (data.used) {
+        } 
+        // ✅ Already used
+        else if (data.used) {
           document.body.innerHTML = "<h2 style='text-align:center;color:#f44;'>❌ Link Already Used</h2>";
-        } else {
-          await deleteDoc(ref); 
-          localStorage.removeItem(token);
-          sessionStorage.removeItem(token);
-          window.location.replace(data.longUrl);
+        } 
+        // ✅ Redirect to long URL
+        else {
+          // Mark as used before redirect
+          await updateDoc(ref, { used: true });
+          
+          // Ensure proper URL scheme
+          let targetUrl = data.longUrl;
+          if (!/^https?:\/\//i.test(targetUrl)) {
+            targetUrl = "https://" + targetUrl;
+          }
+
+          // Redirect
+          window.location.href = targetUrl;
         }
       }
     }
