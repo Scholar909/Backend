@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <title>One-Time Link Shortener</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
   <style>
     /* Reset & base */
     * {
@@ -21,126 +22,37 @@
       text-rendering: optimizeLegibility;
     }
 
-    a {
-      text-decoration: none;
-      color: #0af;
-    }
+    a { text-decoration: none; color: #0af; }
+    button, input { font-family: inherit; border: none; outline: none; }
 
-    button, input {
-      font-family: inherit;
-      border: none;
-      outline: none;
-    }
+    .container { max-width: 600px; margin: 40px auto; padding: 16px; display: flex; flex-direction: column; gap: 20px; }
+    .card { background: rgba(255,255,255,0.07); border:1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px); padding:20px; border-radius:20px; box-shadow:0 8px 24px rgba(0,0,0,0.4); transition: transform 0.2s ease, box-shadow 0.2s ease; }
+    .card:hover { transform: translateY(-4px); box-shadow:0 12px 32px rgba(0,0,0,0.5); }
+    h1 { text-align:center; font-size:1.6rem; margin-bottom:10px; color:#fff; }
 
-    /* Layout */
-    .container {
-      max-width: 600px;
-      margin: 40px auto;
-      padding: 16px;
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-    }
+    .form { display:flex; flex-direction:column; gap:12px; margin-top:12px; }
+    .form input { padding:12px; border-radius:12px; background: rgba(255,255,255,0.08); color:#fff; border:1px solid rgba(255,255,255,0.2); }
+    .form input:focus { border-color:#0af; }
 
-    /* Card */
-    .card {
-      background: rgba(255, 255, 255, 0.07);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      backdrop-filter: blur(12px);
-      padding: 20px;
-      border-radius: 20px;
-      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
+    .btn { padding:12px; border-radius:12px; font-weight:600; cursor:pointer; transition: background 0.2s ease, transform 0.2s ease; }
+    .btn-primary { background:#0af; color:#000; border:1px solid #08c; }
+    .btn-primary:hover { background:#09f; transform:translateY(-2px); }
 
-    .card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 32px rgba(0,0,0,0.5);
-    }
-
-    h1 {
-      text-align: center;
-      font-size: 1.6rem;
-      margin-bottom: 10px;
-      color: #fff;
-    }
-
-    /* Forms */
-    .form {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
-      margin-top: 12px;
-    }
-
-    .form input {
-      padding: 12px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.08);
-      color: #fff;
-      border: 1px solid rgba(255,255,255,0.2);
-    }
-
-    .form input:focus {
-      border-color: #0af;
-    }
-
-    .btn {
-      padding: 12px;
-      border-radius: 12px;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s ease, transform 0.2s ease;
-    }
-
-    .btn-primary {
-      background: #0af;
-      color: #000;
-      border: 1px solid #08c;
-    }
-
-    .btn-primary:hover {
-      background: #09f;
-      transform: translateY(-2px);
-    }
-
-    /* Result */
-    .result {
-      margin-top: 20px;
-      padding: 15px;
-      border-radius: 12px;
-      background: rgba(255, 255, 255, 0.05);
-      border: 1px solid rgba(255,255,255,0.15);
-      word-break: break-word;
-      font-size: 0.95rem;
-    }
-
-    .footer {
-      margin-top: 20px;
-      padding: 12px;
-      text-align: center;
-      font-size: 0.8rem;
-      color: #888;
-      background: rgba(255, 255, 255, 0.04);
-      backdrop-filter: blur(8px);
-      border-radius: 16px;
-    }
+    .result { margin-top:20px; padding:15px; border-radius:12px; background: rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.15); word-break: break-word; font-size:0.95rem; }
+    .footer { margin-top:20px; padding:12px; text-align:center; font-size:0.8rem; color:#888; background: rgba(255,255,255,0.04); backdrop-filter: blur(8px); border-radius:16px; }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="card">
       <h1>One-Time Link Shortener</h1>
-
       <form id="shorten-form" class="form">
         <input type="url" id="longUrl" placeholder="Enter long URL" required>
         <input type="number" id="expiryMinutes" placeholder="Expiry (minutes)" required>
         <button type="submit" class="btn btn-primary">Generate Short Link</button>
       </form>
-
       <div id="result" class="result" style="display:none;"></div>
     </div>
-
     <div class="footer">
       ⚡ Powered by Firebase – Links auto-expire after first use or set time.
     </div>
@@ -148,7 +60,7 @@
 
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-    import { getFirestore, collection, doc, setDoc, getDoc, updateDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, collection, doc, setDoc, getDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyDRQUnCtIZSpq4Jxed_4lwy9LYup37009c",
@@ -173,39 +85,51 @@
       const longUrl = document.getElementById("longUrl").value.trim();
       const minutes = parseInt(document.getElementById("expiryMinutes").value);
       const token = Math.random().toString(36).substr(2, 6);
-
-      // Convert minutes to milliseconds
       const expiresAt = Date.now() + minutes * 60 * 1000;
 
-      await setDoc(doc(linksCol, token), { longUrl, expiresAt, used: false });
+      try {
+        await setDoc(doc(linksCol, token), { longUrl, expiresAt, used: false });
 
-      const shortUrl = window.location.origin + window.location.pathname + "?id=" + token;
+        // --- AUTO DELETE AFTER EXPIRY ---
+        setTimeout(async () => {
+          try { await deleteDoc(doc(linksCol, token)); } 
+          catch(err){ console.warn("Auto-delete failed:", err); }
+        }, minutes * 60 * 1000);
 
-      resultDiv.style.display = "block";
-      resultDiv.innerHTML = `
-        <strong>One-Time Short Link:</strong><br>
-        <a href="${shortUrl}" target="_blank">${shortUrl}</a><br><br>
-        ⏳ Expires in ${minutes} minute(s) OR after first use.
-      `;
+        const shortUrl = window.location.origin + window.location.pathname + "?id=" + token;
+        resultDiv.style.display = "block";
+        resultDiv.innerHTML = `
+          <strong>One-Time Short Link:</strong><br>
+          <a href="${shortUrl}" target="_blank">${shortUrl}</a><br><br>
+          ⏳ Expires in ${minutes} minute(s) OR after first use.
+        `;
+      } catch (err) {
+        console.error("❌ Failed to save link:", err);
+        alert("Failed to save link: " + err.message);
+      }
     });
 
     // --- Redirect if opened with ?id= ---
     const params = new URLSearchParams(window.location.search);
     if (params.has("id")) {
       const token = params.get("id");
-      const snap = await getDoc(doc(linksCol, token));
+      const ref = doc(linksCol, token);
+      const snap = await getDoc(ref);
+
       if (!snap.exists()) {
         document.body.innerHTML = "<h2 style='text-align:center;color:#f44;'>❌ Invalid Link</h2>";
       } else {
         const data = snap.data();
         if (Date.now() > data.expiresAt) {
           document.body.innerHTML = "<h2 style='text-align:center;color:#f44;'>❌ Link Expired</h2>";
-          await deleteDoc(doc(linksCol, token)); // cleanup expired
+          await deleteDoc(ref);
         } else if (data.used) {
           document.body.innerHTML = "<h2 style='text-align:center;color:#f44;'>❌ Link Already Used</h2>";
         } else {
-          await updateDoc(doc(linksCol, token), { used: true, usedAt: Date.now() });
-          window.location.href = data.longUrl;
+          await deleteDoc(ref); 
+          localStorage.removeItem(token);
+          sessionStorage.removeItem(token);
+          window.location.replace(data.longUrl);
         }
       }
     }

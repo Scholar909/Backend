@@ -197,10 +197,27 @@ function resetLogoutTimer(){
 });
 
 document.addEventListener("DOMContentLoaded", ()=>{
+  const params = new URLSearchParams(window.location.search);
+  const whatsappParam = params.get("w"); // WhatsApp in link (Owner Link)
+  
   const whatsapp = localStorage.getItem("ownerDevice");
   const name = localStorage.getItem("ownerName");
   const publicId = localStorage.getItem("ownerPublicId");
   const loggedIn = sessionStorage.getItem("loggedIn");
+
+  // 🔒 Device check: if link has ?w=... and it doesn't match local device → deny
+  if (whatsappParam) {
+    if (!whatsapp) {
+      alert("This device is not registered for this owner. Access denied.");
+      window.location.href = "/"; // redirect home (or block)
+      return;
+    }
+    if (whatsapp !== whatsappParam) {
+      alert("This owner link belongs to a different device. Access denied.");
+      window.location.href = "/"; // redirect home (or block)
+      return;
+    }
+  }
 
   if (loggedIn && whatsapp && name && publicId) {
     // Already logged in
