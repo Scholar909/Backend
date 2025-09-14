@@ -1,0 +1,108 @@
+<!-- public.html -->
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Receive Link & Comment</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <div class="dot"></div>
+        <div>
+          <div class="title">Get a link & comment</div>
+          <div class="subtitle">Watch tutorial, then claim one pair (one device only)</div>
+        </div>
+      </div>
+      <div class="small">Public Collector</div>
+    </div>
+
+    <div class="grid">
+      <div class="card">
+        <div style="font-weight:700">Tutorial: Turn off Web & App Activity</div>
+        <div class="tutorial">
+          <div class="video-wrap">
+            <video controls playsinline>
+              <!-- Put your actual video file inside your project folder -->
+              <source src="web_app_activity.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          
+          <br>
+          
+        <div style="font-weight:700">Tutorial: Post Comment on Link</div>
+        <div class="tutorial">
+          <div class="video-wrap">
+            <video controls playsinline>
+              <!-- Put your actual video file inside your project folder -->
+              <source src="post_comment.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+          
+          <br>
+          
+          <div style="font-weight:700">Tutorial: Change Email Account (Both for posting and Web ans App Activity)</div>
+        <div class="tutorial">
+          <div class="video-wrap">
+            <video controls playsinline>
+              <!-- Put your actual video file inside your project folder -->
+              <source src="change_email.mp4" type="video/mp4">
+              Your browser does not support the video tag.
+            </video>
+          </div>
+        </div>
+
+        <div style="margin-top:12px">
+          <div style="font-weight:700">Get your link & comment</div>
+          <div class="receive-actions">
+            <div class="note">Note: One device can claim 1 pair per day. After claiming, that device cannot claim again for a specific period of time.</div>
+            <br>
+            <button id="btn-receive" type="button" class="btn btn-primary">Receive link & comment</button>
+            <div id="receive-slot" class="slot" style="display:none">
+              <a id="pair-link" class="pair-link" href="#" target="_blank" rel="noopener noreferrer">Open link to post</a>
+              <div class="pair-comment" id="pair-comment"></div>
+              <div style="display:flex;gap:8px;margin-top:8px">
+                <button id="btn-copy" type="button" class="btn btn-ghost">Copy comment</button>
+                <a id="btn-send" class="btn btn-primary" href="#" target="_blank">Send screenshots to WhatsApp</a>
+              </div>
+            </div>
+            <div id="receive-message" class="note" style="margin-top:10px"></div>
+          </div>
+        </div>
+
+        <div style="margin-top:12px" class="small">
+          <strong>Proofs required after posting:</strong><br>
+          1) Screenshot of Web & App Activity turned off.<br>
+          2) Screenshot of the posted review showing the exact comment text.<br>
+          Send both screenshots to the WhatsApp number shown after you receive the pair.
+        </div>
+      </div>
+      
+      <br>
+
+      <div class="card">
+        <div style="font-weight:700">Rules & Notes</div>
+        <div class="small" style="margin-top:8px">
+          - Maximum 4 successful claims total per calendar day across all devices.<br>
+          - If the limit is reached for today, try again tomorrow.<br>
+          - Only one device per claim. To use another device, use a different email.<br>
+          - Ensure that the email whos web and app activity is turned off must be the same email you use to post the comment on link.
+          - Have any questions, drop it on the WhatsApp number before you click Receive button.
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="small">After you send screenshots to the owner's WhatsApp, screenshot that chat and send the screenshot to Earncrib as proof to confirm and get paid.</div>
+      <div class="small">Make sure screenshots clearly show the turned-off setting and the posted comment.</div>
+    </div>
+  </div>
+
+  <script type="module" src="public.js"></script>
+</body>
+</html>

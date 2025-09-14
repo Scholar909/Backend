@@ -1,0 +1,104 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Owner Dashboard — Link/Comment Manager</title>
+  <link rel="stylesheet" href="style.css">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="logo">
+        <div class="dot"></div>
+        <div>
+          <div class="title">Owner Dashboard</div>
+          <div class="subtitle">Add links & prewritten comments — protected by password</div>
+        </div>
+      </div>
+      <div>
+        <div class="small">Owner area</div>
+        <button id="btn-logout" type="button" class="btn btn-ghost" style="display:none;margin-top:8px">Logout</button>
+      </div>
+    </div>
+
+    <div class="grid">
+
+      <!-- Register/Login card -->
+      <div class="card" id="auth-card">
+        <div style="display:flex;gap:12px;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-weight:700">Register / Login</div>
+            <div class="small">Register once: your whatsapp and password (hashed) will be stored</div>
+          </div>
+        </div>
+
+        <form id="owner-form" class="form" onsubmit="return false;">
+          <label>Name</label>
+          <input id="owner-name" placeholder="Your name" required>
+
+          <label>Whatsapp number (displayed on public page & used for receiving screenshots)</label>
+          <input id="owner-whatsapp" placeholder="8123..." required>
+
+          <label>Password (keep safe)</label>
+          <input id="owner-pw" type="password" placeholder="password" required>
+
+          <div style="display:flex;gap:8px">
+            <button id="btn-register" type="button" class="btn btn-primary">Register / Save</button>
+            <button id="btn-login" type="button" class="btn btn-ghost">Login</button>
+          </div>
+        </form>
+      </div>
+
+      <!-- Add Link + Comment card -->
+      <div class="card" id="add-card" style="display:none">
+        <div style="font-weight:700;margin-bottom:8px">Add Link & Comment</div>
+        <form id="pair-form" class="form" onsubmit="return false;">
+          <label>Link</label>
+          <input id="pair-link" placeholder="https://example.com/post/..." required>
+          <label>Pre-written comment</label>
+          <textarea id="pair-comment" rows="3" placeholder="Great product! ..." required></textarea>
+
+          <label>Optional: limit (leave blank to be unlimited)</label>
+          <input id="pair-limit" placeholder="Enter integer or leave blank">
+
+          <div style="display:flex;gap:8px">
+            <button id="btn-add" class="btn btn-primary">Add Pair</button>
+          </div>
+        </form>
+        <div class="small" style="margin-top:12px">
+          WhatsApp for receivers to send proof: <span id="owner-wh-display"></span>
+        </div>
+      </div>
+
+      <!-- Existing Pairs card -->
+      <div class="card" id="pairs-card" style="display:none">
+        <div style="font-weight:700;margin-bottom:8px">Existing Pairs</div>
+        <div id="pairs-list" class="pairs-list"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-weight:700">How it works (owner)</div>
+        <div class="small" style="margin-top:8px">
+          - Register with name, WhatsApp, and a password.<br>
+          - Add as many link+comment pairs as you want.<br>
+          - Pairs are unclaimed until a receiver claims one.<br>
+          - Each day maximum 4 claims are allowed globally.<br>
+          - When a pair is claimed, it cannot be given to others again.<br>
+          - Receivers will send proofs to the saved WhatsApp.
+        </div>
+        <div style="margin-top:12px">
+          <div class="note">Tip: keep your password safe. This is client-side-only protection.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>Made for your collection flow</div>
+      <div class="small">Local device lock + Firestore backend</div>
+    </div>
+  </div>
+
+  <script type="module" src="owner.js"></script>
+</body>
+</html>

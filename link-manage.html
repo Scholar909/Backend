@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Owner Links</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f7f9fc;
+      color: #333;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #0f4e75;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      background: white;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+    }
+    th, td {
+      border: 1px solid #ddd;
+      padding: 10px;
+      text-align: left;
+    }
+    th {
+      background: #0f4e75;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background: #f2f2f2;
+    }
+    a {
+      color: #0f4e75;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <h1>All Generated Links</h1>
+  <table>
+    <thead>
+      <tr>
+        <th>#</th>
+        <th>WhatsApp</th>
+        <th>Owner Link</th>
+        <th>Public Link</th>
+      </tr>
+    </thead>
+    <tbody id="links-table"></tbody>
+  </table>
+
+  <script type="module">
+    import * as fb from "./firebase.js";
+    const { db, collection, getDocs } = fb;
+
+    const ownersCol = collection(db, "owners");
+    const tbody = document.getElementById("links-table");
+
+    async function loadLinks() {
+      const snapshot = await getDocs(ownersCol);
+      let i = 1;
+
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        const whatsapp = data.whatsapp;
+        const publicId = data.publicId;
+
+        // build URLs
+        const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "");
+        const ownerLink = `${baseUrl}/owner.html?w=${encodeURIComponent(whatsapp)}`;
+        const publicLink = `${baseUrl}/public.html?o=${publicId}`;
+
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${i++}</td>
+          <td>${whatsapp}</td>
+          <td><a href="${ownerLink}" target="_blank">Owner Link</a></td>
+          <td><a href="${publicLink}" target="_blank">Public Link</a></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    loadLinks();
+  </script>
+</body>
+</html
