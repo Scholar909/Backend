@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>FMK Brand Package Generator</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body style="font-family: Arial, sans-serif; text-align:center; padding:50px;">
+
+  <h2>📦 FMK Counseling & Consult</h2>
+  <p>Click below to generate your full brand package ZIP file.</p>
+  <button id="generateBtn" style="padding:10px 20px; font-size:16px; cursor:pointer;">Generate Brand Package</button>
+
+  <script>
+    // ================================
+    // 1. Folder Structure
+    // ================================
+    const base = "FMK_Counseling_and_Consult/";
+    const subfolders = [
+      "Logos/PNG_Web",
+      "Logos/PNG_Print",
+      "Logos/SVG",
+      "Mockups/Flat",
+      "Mockups/Realistic",
+      "PDFs",
+      "Fonts"
+    ];
+
+    // ================================
+    // 2. Color Palettes
+    // ================================
+    const colorPalettes = {
+      "The Embrace": ["#005F73", "#FF7F51", "#EAEAEA"],
+      "The Growing Tree": ["#2E7D32", "#A5D6A7", "#795548"],
+      "The Open Door": ["#1A237E", "#FBC02D", "#FFFFFF"],
+      "The Circle of Support": ["#6A1B9A", "#D1C4E9", "#F5F5DC"],
+      "The Rising Path": ["#FF7043", "#0288D1", "#FFF8E1"]
+    };
+
+    // ================================
+    // 3. Helper - Create PDF
+    // ================================
+    function createPdf(title, lines) {
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(18);
+      doc.text(title, 20, 20);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(12);
+      let y = 35;
+      lines.forEach(line => {
+        doc.text(line, 20, y);
+        y += 10;
+      });
+      return doc.output("blob");
+    }
+
+    // ================================
+    // 4. Generate on Button Click
+    // ================================
+    document.getElementById("generateBtn").onclick = async () => {
+      const zip = new JSZip();
+
+      // Create subfolders
+      subfolders.forEach(f => zip.folder(base + f));
+
+      // PDFs
+      zip.file(base + "PDFs/Master_Index.pdf", createPdf(
+        "FMK Counseling & Consult - Master Index",
+        [
+          "1. Logos (PNG, SVG)",
+          "2. Mockups (Flat + Realistic)",
+          "3. Brand Identity PDF",
+          "4. Usage Guide PDF",
+          "5. Fonts Folder"
+        ]
+      ));
+
+      zip.file(base + "PDFs/Usage_Guide.pdf", createPdf(
+        "FMK Counseling & Consult - Usage Guide",
+        [
+          "✔ Use logo on light or neutral backgrounds.",
+          "✔ Maintain clear space around the logo.",
+          "❌ Do not stretch, distort, or recolor logos.",
+          "❌ Do not place logos on clashing backgrounds."
+        ]
+      ));
+
+      const identityLines = [];
+      for (const [name, colors] of Object.entries(colorPalettes)) {
+        identityLines.push(`${name} - Colors: ${colors.join(", ")}`);
+      }
+      zip.file(base + "PDFs/Brand_Identity.pdf", createPdf(
+        "FMK Counseling & Consult - Brand Identity",
+        identityLines
+      ));
+
+      const showcaseLines = [];
+      for (const [name, colors] of Object.entries(colorPalettes)) {
+        showcaseLines.push(`${name} | Palette: ${colors.join(", ")}`);
+      }
+      zip.file(base + "PDFs/Logo_Showcase.pdf", createPdf(
+        "FMK Counseling & Consult - Logo Showcase",
+        showcaseLines
+      ));
+
+      // Final ZIP
+      const content = await zip.generateAsync({ type: "blob" });
+      saveAs(content, "FMK_Brand_Package.zip");
+    };
+  </script>
+
+</body>
+</html>
