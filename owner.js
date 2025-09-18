@@ -3,9 +3,16 @@ import * as fb from "./firebase.js";
 const { db, collection, doc, setDoc, addDoc, getDoc, getDocs, query, updateDoc, deleteDoc, serverTimestamp } = fb;
 
 const ownersCol = collection(db, "owners");
+const tokensCol = collection(db, "tokens"); // 🔑 valid registration tokens
 const pairsCol = collection(db, "pairs");
 
+// helper
 const el = id => document.getElementById(id);
+
+// grab token input
+const tokenInput = el("owner-token");
+
+// button events
 el("btn-register").addEventListener("click", registerOwner);
 el("btn-login").addEventListener("click", loginOwner);
 el("btn-logout").addEventListener("click", logoutOwner);
@@ -17,6 +24,11 @@ let logoutTimer = null;
 // random publicId generator
 function generatePublicId() {
   return Math.random().toString(36).slice(2, 10);
+}
+
+// random token generator (admin side)
+export function generateToken() {
+  return Math.random().toString(36).slice(2, 10).toUpperCase();
 }
 
 // Hash password
@@ -43,8 +55,15 @@ async function registerOwner(){
 
   const name = el("owner-name").value.trim();
   let whatsapp = el("owner-whatsapp").value.trim();
+  const token = el("owner-token").value.trim(); 
   const pw = el("owner-pw").value;
-  if(!name||!whatsapp||!pw) return alert("Fill all fields");
+  if(!name||!whatsapp||!pw||!token) return alert("Fill all fields including token");
+
+  // 🔑 validate token
+  const tokenSnap = await getDoc(doc(db, "tokens", token));
+  if (!tokenSnap.exists()) {
+    return alert("Invalid or expired token. Ask admin for a new one.");
+  }
 
   whatsapp = formatWhatsapp(whatsapp);
   const hash = await sha256(pw);
@@ -59,12 +78,16 @@ async function registerOwner(){
     createdAt: serverTimestamp() 
   });
 
+  // 🔑 delete token after use
+  await fb.deleteDoc(doc(db, "tokens", token));
+
   localStorage.setItem("ownerDevice", whatsapp);
   localStorage.setItem("ownerName", name);
-  localStorage.setItem("ownerPublicId", publicId); // ✅ save it
+  localStorage.setItem("ownerPublicId", publicId); 
   sessionStorage.setItem("loggedIn", "true");
 
   showOwnerArea(whatsapp, name, publicId);
+  tokenInput.style.display = "none"; // hide after registration
 
   alert("Registered successfully!\n\nYour public link is:\n" + window.location.origin + "/public.html?o=" + publicId);
 }
@@ -88,8 +111,9 @@ async function loginOwner() {
   const hash = await sha256(pw);
   if (hash !== data.passwordHash) return alert("Wrong password");
 
+  localStorage.setItem("ownerDevice", whatsapp);
   localStorage.setItem("ownerName", data.name);
-  localStorage.setItem("ownerPublicId", data.publicId); // ✅ keep it
+  localStorage.setItem("ownerPublicId", data.publicId);
   sessionStorage.setItem("loggedIn", "true");
 
   showOwnerArea(whatsapp, data.name, data.publicId);
@@ -107,15 +131,13 @@ function logoutOwner(){
   const whatsapp = localStorage.getItem("ownerDevice");
   const name = localStorage.getItem("ownerName");
   if (whatsapp && name) {
-    // Autofill but disable name + whatsapp
     el("owner-name").value = name;
     el("owner-whatsapp").value = whatsapp;
     el("owner-name").disabled = true;
     el("owner-whatsapp").disabled = true;
-
-    // Hide register, only allow login
     el("btn-register").style.display = "none";
     el("btn-login").style.display = "inline-block";
+    tokenInput.style.display = "none";   // hide token on login
   }
 }
 
@@ -129,7 +151,6 @@ function showOwnerArea(whatsapp, name, publicId){
   loadPairs();
   resetLogoutTimer();
 
-  // show public link somewhere
   el("public-link-display").textContent = window.location.origin + "/public.html?o=" + publicId;
 }
 
@@ -145,7 +166,7 @@ async function addPair(){
     link, comment,
     ownerWhatsApp: currentOwner.whatsapp,
     ownerName: currentOwner.name,
-    ownerPublicId: currentOwner.publicId, // ✅ tie to this owner
+    ownerPublicId: currentOwner.publicId,
     createdAt: serverTimestamp(),
     claimed: false,
     limit: isNaN(limit) ? null : limit
@@ -165,12 +186,12 @@ async function loadPairs(){
   snaps.forEach(s => {
     const d = s.data();
     if (d.deleted) return;
-    if (d.ownerPublicId !== currentOwner.publicId) return; // ✅ only this owner’s pairs
+    if (d.ownerPublicId !== currentOwner.publicId) return;
     const item = document.createElement("div");
     item.className = "pair-item";
     item.innerHTML = `
       <div><b>${d.comment.slice(0,80)}${d.comment.length>80?"...":""}</b></div>
-      <div class="small">${d.ownerName} · ${d.ownerWhatsApp} · ${d.claimed ? "<span style="color: limegreen; font-weight: bold;">Claimed</span>" : "Available"}</div>
+      <div class="small">${d.ownerName} · ${d.ownerWhatsApp} · ${d.claimed ? "<span style='color: limegreen; font-weight: bold;'>Claimed</span>" : "Available"}</div>
       <div class="small">Link: ${d.link}</div>
       <button data-id="${s.id}" class="btn btn-ghost" style="margin-top:6px">Delete</button>
     `;
@@ -198,16 +219,14 @@ function resetLogoutTimer(){
 
 document.addEventListener("DOMContentLoaded", ()=>{
   const params = new URLSearchParams(window.location.search);
-  const whatsappParam = params.get("w"); // WhatsApp in link (Owner Link)
+  const whatsappParam = params.get("w");
   
   const whatsapp = localStorage.getItem("ownerDevice");
   const name = localStorage.getItem("ownerName");
   const publicId = localStorage.getItem("ownerPublicId");
   const loggedIn = sessionStorage.getItem("loggedIn");
 
-  // 🔒 Device check: if link has ?w=... and it doesn't match local device → deny
   if (whatsappParam) {
-    // Load this owner's info from Firestore
     getDoc(doc(db, "owners", whatsappParam)).then(snap => {
       if (!snap.exists()) {
         alert("Owner not found");
@@ -215,37 +234,31 @@ document.addEventListener("DOMContentLoaded", ()=>{
         return;
       }
       const data = snap.data();
-  
-      // Prefill and lock fields
       el("owner-name").value = data.name;
       el("owner-whatsapp").value = data.whatsapp;
       el("owner-name").disabled = true;
       el("owner-whatsapp").disabled = true;
-  
-      // Force login-only view
       el("btn-register").style.display = "none";
       el("btn-login").style.display = "inline-block";
+      tokenInput.style.display = "none"; 
     });
   }
 
   if (loggedIn && whatsapp && name && publicId) {
-    // Already logged in
     showOwnerArea(whatsapp,name,publicId);
-  } else if (whatsapp && name && publicId && sessionStorage.getItem("loggedIn") !== "wiped") {
-    // Registered before → auto fill but disable fields
+  } else if (whatsapp && name && publicId) {
     el("owner-name").value = name;
     el("owner-whatsapp").value = whatsapp;
     el("owner-name").disabled = true;
     el("owner-whatsapp").disabled = true;
-
-    // Hide register, only allow login
     el("btn-register").style.display = "none";
     el("btn-login").style.display = "inline-block";
+    tokenInput.style.display = "none"; // hide on login
   } else {
-    // New device → keep all empty, show register
     el("owner-name").disabled = false;
     el("owner-whatsapp").disabled = false;
     el("btn-register").style.display = "inline-block";
     el("btn-login").style.display = "none";
+    tokenInput.style.display = "block"; // show on registration
   }
 });

@@ -5,7 +5,6 @@
   <title>Owner Links</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="robots" content="noindex, nofollow">
-  <link rel="stylesheet" href="style.css">
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -16,6 +15,32 @@
     h1 {
       text-align: center;
       color: #0f4e75;
+    }
+    #token-box {
+      text-align: center;
+      margin: 20px 0;
+    }
+    #btn-generate {
+      background: #0f4e75;
+      color: #fff;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+    }
+    #btn-generate:hover {
+      background: #0c3c59;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+    #new-token {
+      font-weight: bold;
+      color: green;
+      margin-bottom: 12px;
+      font-size: 20px;
     }
     table {
       width: 100%;
@@ -47,6 +72,12 @@
 </head>
 <body>
   <h1>All Generated Links</h1>
+
+  <div id="token-box">
+    <div id="new-token">No token generated yet</div>
+    <button id="btn-generate" type="button">Generate Registration Token</button>
+  </div>
+
   <table>
     <thead>
       <tr>
@@ -61,21 +92,24 @@
 
   <script type="module">
     import * as fb from "./firebase.js";
-    const { db, collection, getDocs } = fb;
+    const { db, collection, doc, setDoc, getDoc, getDocs, deleteDoc } = fb;
 
     const ownersCol = collection(db, "owners");
+    const tokensCol = collection(db, "tokens");
     const tbody = document.getElementById("links-table");
+    const btnGen = document.getElementById("btn-generate");
+    const tokenDiv = document.getElementById("new-token");
 
     async function loadLinks() {
       const snapshot = await getDocs(ownersCol);
       let i = 1;
+      tbody.innerHTML = "";
 
-      snapshot.forEach(doc => {
-        const data = doc.data();
+      snapshot.forEach(docSnap => {
+        const data = docSnap.data();
         const whatsapp = data.whatsapp;
         const publicId = data.publicId;
 
-        // build URLs
         const baseUrl = window.location.origin + window.location.pathname.replace(/\/[^/]*$/, "");
         const ownerLink = `${baseUrl}/owner.html?w=${encodeURIComponent(whatsapp)}`;
         const publicLink = `${baseUrl}/index.html?o=${publicId}`;
@@ -91,7 +125,40 @@
       });
     }
 
+    // 🔑 generate token
+    function generateToken() {
+      return Math.random().toString(36).slice(2, 10).toUpperCase();
+    }
+
+    btnGen.addEventListener("click", async () => {
+      try {
+        const token = generateToken();
+        await setDoc(doc(tokensCol, token), { createdAt: Date.now(), used: false });
+        tokenDiv.textContent = "New Token: " + token;
+        tokenDiv.style.color = "green";
+      } catch (err) {
+        tokenDiv.textContent = "❌ Failed to generate token";
+        tokenDiv.style.color = "red";
+        console.error(err);
+      }
+    });
+
     loadLinks();
+
+    // 👉 helper: expire a token after use
+    export async function useToken(token) {
+      const ref = doc(tokensCol, token);
+      const snap = await getDoc(ref);
+      if (!snap.exists()) throw new Error("Invalid token");
+      await deleteDoc(ref); // ❌ remove so it can’t be reused
+    }
+
+    // 👉 helper: remove owner when cleared
+    export async function removeOwner(whatsapp) {
+      const ownerRef = doc(ownersCol, whatsapp);
+      await deleteDoc(ownerRef);
+      loadLinks(); // refresh table so row disappears
+    }
   </script>
 </body>
-</html
+</html>

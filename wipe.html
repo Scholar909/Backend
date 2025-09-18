@@ -83,7 +83,7 @@
 <body>
   <div class="card">
     <h2>Reset My Device</h2>
-    <p>This will completely erase your registration, pairs, claims, submissions, reviews, and device locks from this website.</p>
+    <p>This will completely erase your registration, tokens, pairs, claims, submissions, reviews, and device locks from this website.</p>
     <button class="btn btn-primary" onclick="clearAll()">Clear Everything</button>
     <p id="status"></p>
   </div>
@@ -150,6 +150,13 @@
           for (const s of dcSnap.docs) {
             await deleteDoc(doc(db, "dailyCounts", s.id));
           }
+
+          // Delete tokens linked to this owner
+          const tokensCol = collection(db, "tokens");
+          const tokenSnap = await getDocs(query(tokensCol, where("ownerPublicId", "==", ownerPublicId)));
+          for (const s of tokenSnap.docs) {
+            await deleteDoc(doc(db, "tokens", s.id));
+          }
         }
 
         // Delete claims linked to this device
@@ -182,7 +189,7 @@
 
         status.textContent = "✅ Everything cleared.\nThis device is no longer registered.";
 
-        // 🔄 Redirect after 1s
+        // 🔄 Close this tab after 1s
         setTimeout(() => {
           window.open('', '_self');
           window.close();
