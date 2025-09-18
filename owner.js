@@ -170,7 +170,7 @@ async function loadPairs(){
     item.className = "pair-item";
     item.innerHTML = `
       <div><b>${d.comment.slice(0,80)}${d.comment.length>80?"...":""}</b></div>
-      <div class="small">${d.ownerName} · ${d.ownerWhatsApp} · ${d.claimed ? "Claimed" : "Available"}</div>
+      <div class="small">${d.ownerName} · ${d.ownerWhatsApp} · ${d.claimed ? "<span style="color: limegreen; font-weight: bold;">Claimed</span>" : "Available"}</div>
       <div class="small">Link: ${d.link}</div>
       <button data-id="${s.id}" class="btn btn-ghost" style="margin-top:6px">Delete</button>
     `;
