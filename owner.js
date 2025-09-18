@@ -222,7 +222,7 @@ document.addEventListener("DOMContentLoaded", ()=>{
   if (loggedIn && whatsapp && name && publicId) {
     // Already logged in
     showOwnerArea(whatsapp,name,publicId);
-  } else if (whatsapp && name && publicId) {
+  } else if (whatsapp && name && publicId && sessionStorage.getItem("loggedIn") !== "wiped") {
     // Registered before → auto fill but disable fields
     el("owner-name").value = name;
     el("owner-whatsapp").value = whatsapp;

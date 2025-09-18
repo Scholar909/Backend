@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Full Wipe Tool</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <style>
+    body {
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      font-family: Arial, sans-serif;
+      background: #0f4e75;
+      color: white;
+      text-align: center;
+    }
+    .card {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 12px;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 0 10px rgba(0,0,0,0.3);
+      max-width: 400px;
+    }
+    button {
+      margin-top: 20px;
+      padding: 12px 20px;
+      font-size: 16px;
+      font-weight: bold;
+      border: none;
+      border-radius: 8px;
+      background: #fff;
+      color: #0f4e75;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+    button:hover {
+      background: #e5e5e5;
+    }
+    #status {
+      margin-top: 15px;
+      font-size: 14px;
+      opacity: 0.9;
+      white-space: pre-line;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h2>Reset My Device</h2>
+    <p>This will completely erase your registration, pairs, and device locks from this website.</p>
+    <button onclick="clearAll()">Clear Everything</button>
+    <p id="status"></p>
+  </div>
+
+  <script type="module">
+    // ✅ Import Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
+    import { getFirestore, doc, getDoc, deleteDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+
+    // 🔑 Your Firebase config (replace with yours!)
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRQUnCtIZSpq4Jxed_4lwy9LYup37009c",
+      authDomain: "whatsapp-stuffs.firebaseapp.com",
+      databaseURL: "https://whatsapp-stuffs-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "whatsapp-stuffs",
+      storageBucket: "whatsapp-stuffs.firebasestorage.app",
+      messagingSenderId: "777872998496",
+      appId: "1:777872998496:web:ae4b7f2dc278a3c1aa0305"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    async function clearAll() {
+      const status = document.getElementById("status");
+      status.textContent = "Working...";
+
+      try {
+        // Grab identifiers
+        const ownerWhatsApp = localStorage.getItem("ownerDevice");
+        const ownerPublicId = localStorage.getItem("ownerPublicId");
+        const deviceId = localStorage.getItem("collector_device_id");
+
+        // Delete owner account
+        if (ownerWhatsApp) {
+          await deleteDoc(doc(db, "owners", ownerWhatsApp));
+        }
+
+        // Delete all pairs of this owner
+        if (ownerPublicId) {
+          const pairsCol = collection(db, "pairs");
+          const q1 = query(pairsCol, where("ownerPublicId", "==", ownerPublicId));
+          const snap1 = await getDocs(q1);
+          for (const s of snap1.docs) {
+            await deleteDoc(doc(db, "pairs", s.id));
+          }
+        }
+
+        // Delete claims linked to this device
+        if (deviceId && ownerPublicId) {
+          const claimsCol = collection(db, "claims");
+          const q2 = query(claimsCol, where("deviceId", "==", deviceId), where("ownerPublicId", "==", ownerPublicId));
+          const snap2 = await getDocs(q2);
+          for (const s of snap2.docs) {
+            await deleteDoc(doc(db, "claims", s.id));
+          }
+
+          // deviceClaims
+          await deleteDoc(doc(db, "deviceClaims", deviceId + "_" + ownerPublicId));
+        }
+
+        // dailyCounts (best-effort, optional)
+        // Since dailyCounts are per day, we can’t know all IDs → optional cleanup skipped
+        // You can purge them manually if needed.
+
+        // Clear browser storages
+        localStorage.clear();
+        sessionStorage.clear();
+
+        if (window.indexedDB) {
+          const dbs = await indexedDB.databases();
+          for (const db of dbs) {
+            if (db.name) indexedDB.deleteDatabase(db.name);
+          }
+        }
+
+        if (window.caches) {
+          const names = await caches.keys();
+          for (const n of names) await caches.delete(n);
+        }
+
+        status.textContent = "✅ Everything cleared.\nThis device is no longer registered.";
+      } catch (e) {
+        console.error(e);
+        status.textContent = "❌ Error: " + e.message;
+      }
+    }
+    window.clearAll = clearAll;
+    status.textContent = "✅ Everything cleared.\nThis device is no longer registered.";
+
+// 🔄 Hard refresh after 1s
+    setTimeout(() => {
+      window.location.href = "owner.html"; 
+    }, 1000);
+  </script>
+</body>
+</html>
