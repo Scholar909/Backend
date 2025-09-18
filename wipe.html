@@ -171,8 +171,8 @@
           await deleteDoc(doc(db, "deviceClaims", deviceId + "_" + ownerPublicId));
         }
         
-        // Remove token associated with this owner
-        if (ownerPublicId && ownerWhatsApp) {
+        // Extra: remove any token created with this WhatsApp (fallback)
+        if (ownerWhatsApp) {
           const tokensCol = collection(db, "tokens");
           const tokenSnap = await getDocs(query(tokensCol, where("ownerWhatsApp", "==", ownerWhatsApp)));
           for (const t of tokenSnap.docs) {
@@ -180,7 +180,7 @@
           }
         }
 
-        // Clear browser storages
+        // ✅ Clear browser storages
         localStorage.clear();
         sessionStorage.clear();
 
