@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Brand Identity Generator</title>
+  <style>
+    body { font-family: Arial, sans-serif; text-align: center; padding: 20px; }
+    canvas { border: 1px solid #ccc; margin: 15px 0; }
+    .palette { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+    .swatch { width: 50px; height: 50px; border-radius: 5px; }
+    button { margin: 10px; padding: 10px 20px; cursor: pointer; }
+  </style>
+</head>
+<body>
+
+  <h2>🎨 Brand Identity Generator</h2>
+  <button onclick="generateBrand()">Generate New Brand</button>
+
+  <h3 id="brandName"></h3>
+  <p id="tagline"></p>
+  <p><strong>Font Suggestion:</strong> <span id="fontChoice"></span></p>
+
+  <h4>Color Palette</h4>
+  <div id="palette" class="palette"></div>
+
+  <h4>Logo</h4>
+  <canvas id="logoCanvas" width="400" height="400"></canvas>
+  <br>
+  <button onclick="downloadCanvas('logoCanvas', currentBrandName + '_logo.png')">Download Logo</button>
+
+  <h4>Branding Board</h4>
+  <canvas id="boardCanvas" width="800" height="600"></canvas>
+  <br>
+  <button onclick="downloadCanvas('boardCanvas', currentBrandName + '_branding_board.png')">Download Branding Board</button>
+
+  <h4>Brand Info</h4>
+  <button onclick="downloadInfo()">Download Branding Info (.txt)</button>
+
+  <script>
+    const adjectives = ["Creative", "Dynamic", "Bold", "Modern", "Vivid", "Pixel", "Graphic", "Vision"];
+    const nouns = ["Studio", "Design", "Works", "Lab", "House", "Collective"];
+    const fonts = ["Arial", "Verdana", "Times New Roman", "Courier New", "Helvetica"];
+    const taglines = [
+      "Designing your dreams",
+      "Creativity unleashed",
+      "Where ideas come alive",
+      "Pixels with purpose",
+      "Crafting visual stories"
+    ];
+
+    let currentBrandName = "";
+    let currentTagline = "";
+    let currentFont = "";
+    let currentPalette = [];
+
+    function randomItem(arr) {
+      return arr[Math.floor(Math.random() * arr.length)];
+    }
+
+    function randomColor() {
+      const r = Math.floor(Math.random() * 150) + 50;
+      const g = Math.floor(Math.random() * 150) + 50;
+      const b = Math.floor(Math.random() * 150) + 50;
+      return `rgb(${r},${g},${b})`;
+    }
+
+    function generateBrand() {
+      // Brand name
+      currentBrandName = `${randomItem(adjectives)} ${randomItem(nouns)}`;
+      document.getElementById("brandName").innerText = currentBrandName;
+
+      // Tagline
+      currentTagline = randomItem(taglines);
+      document.getElementById("tagline").innerText = "Tagline: " + currentTagline;
+
+      // Font
+      currentFont = randomItem(fonts);
+      document.getElementById("fontChoice").innerText = currentFont;
+
+      // Palette
+      currentPalette = Array.from({ length: 5 }, randomColor);
+      const paletteDiv = document.getElementById("palette");
+      paletteDiv.innerHTML = "";
+      currentPalette.forEach(c => {
+        const div = document.createElement("div");
+        div.className = "swatch";
+        div.style.background = c;
+        paletteDiv.appendChild(div);
+      });
+
+      // Logo
+      drawLogo();
+
+      // Branding board
+      drawBoard();
+    }
+
+    function drawLogo() {
+      const canvas = document.getElementById("logoCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = randomItem(currentPalette);
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      const initials = currentBrandName.split(" ").map(w => w[0]).join("");
+      ctx.font = "120px " + currentFont;
+      ctx.fillStyle = randomItem(currentPalette);
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(initials, canvas.width / 2, canvas.height / 2);
+    }
+
+    function drawBoard() {
+      const canvas = document.getElementById("boardCanvas");
+      const ctx = canvas.getContext("2d");
+      ctx.fillStyle = "#fff";
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      // Logo (smaller)
+      const logoCanvas = document.getElementById("logoCanvas");
+      ctx.drawImage(logoCanvas, 50, 50, 300, 300);
+
+      // Palette
+      const swatchSize = 80;
+      currentPalette.forEach((c, i) => {
+        ctx.fillStyle = c;
+        ctx.fillRect(500, 50 + i * (swatchSize + 10), swatchSize, swatchSize);
+      });
+
+      // Brand name + tagline
+      ctx.fillStyle = "#000";
+      ctx.font = "30px " + currentFont;
+      ctx.fillText("Brand: " + currentBrandName, 50, 480);
+
+      ctx.fillStyle = "#555";
+      ctx.font = "20px " + currentFont;
+      ctx.fillText("Tagline: " + currentTagline, 50, 530);
+    }
+
+    function downloadCanvas(canvasId, filename) {
+      const canvas = document.getElementById(canvasId);
+      const link = document.createElement("a");
+      link.download = filename;
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function downloadInfo() {
+      const info = `
+Brand Name: ${currentBrandName}
+Tagline: ${currentTagline}
+Font: ${currentFont}
+Color Palette: ${currentPalette.join(", ")}
+Logo File: ${currentBrandName.replace(/ /g, "_")}_logo.png
+Branding Board: ${currentBrandName.replace(/ /g, "_")}_branding_board.png
+      `;
+      const blob = new Blob([info], { type: "text/plain" });
+      const link = document.createElement("a");
+      link.download = currentBrandName.replace(/ /g, "_") + "_branding.txt";
+      link.href = URL.createObjectURL(blob);
+      link.click();
+    }
+
+    // Auto-generate on page load
+    generateBrand();
+  </script>
+
+</body>
+  </html>
