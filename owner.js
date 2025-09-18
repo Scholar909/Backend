@@ -207,16 +207,25 @@ document.addEventListener("DOMContentLoaded", ()=>{
 
   // 🔒 Device check: if link has ?w=... and it doesn't match local device → deny
   if (whatsappParam) {
-    if (!whatsapp) {
-      alert("This device is not registered for this owner. Access denied.");
-      window.location.href = "/"; // redirect home (or block)
-      return;
-    }
-    if (whatsapp !== whatsappParam) {
-      alert("This owner link belongs to a different device. Access denied.");
-      window.location.href = "/"; // redirect home (or block)
-      return;
-    }
+    // Load this owner's info from Firestore
+    getDoc(doc(db, "owners", whatsappParam)).then(snap => {
+      if (!snap.exists()) {
+        alert("Owner not found");
+        window.location.href = "/";
+        return;
+      }
+      const data = snap.data();
+  
+      // Prefill and lock fields
+      el("owner-name").value = data.name;
+      el("owner-whatsapp").value = data.whatsapp;
+      el("owner-name").disabled = true;
+      el("owner-whatsapp").disabled = true;
+  
+      // Force login-only view
+      el("btn-register").style.display = "none";
+      el("btn-login").style.display = "inline-block";
+    });
   }
 
   if (loggedIn && whatsapp && name && publicId) {

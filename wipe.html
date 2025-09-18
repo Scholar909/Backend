@@ -5,44 +5,77 @@
   <title>Full Wipe Tool</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <style>
-    body {
+    /* Reset & base */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    html, body {
+      height: 100%;
+      font-family: "Inter", system-ui, sans-serif;
+      background: linear-gradient(135deg, #000, #222);
+      color: #f1f1f1;
+      -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      min-height: 100vh;
-      font-family: Arial, sans-serif;
-      background: #0f4e75;
-      color: white;
+      padding: 16px;
+    }
+
+    /* Card */
+    .card {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      padding: 20px;
+      border-radius: 20px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+      max-width: 420px;
       text-align: center;
     }
-    .card {
-      background: rgba(255,255,255,0.1);
-      padding: 20px;
-      border-radius: 12px;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 0 10px rgba(0,0,0,0.3);
-      max-width: 400px;
+
+    .card h2 {
+      font-size: 1.4rem;
+      font-weight: 700;
+      margin-bottom: 10px;
     }
-    button {
-      margin-top: 20px;
+
+    .card p {
+      font-size: 0.9rem;
+      color: #bbb;
+      margin-bottom: 16px;
+    }
+
+    /* Buttons */
+    .btn {
       padding: 12px 20px;
-      font-size: 16px;
-      font-weight: bold;
-      border: none;
-      border-radius: 8px;
-      background: #fff;
-      color: #0f4e75;
+      border-radius: 12px;
+      font-weight: 600;
       cursor: pointer;
-      transition: 0.3s;
+      transition: background 0.2s ease, transform 0.2s ease;
+      border: none;
+      outline: none;
     }
-    button:hover {
-      background: #e5e5e5;
+
+    .btn-primary {
+      background: #000;
+      color: #fff;
+      border: 1px solid #444;
     }
+
+    .btn-primary:hover {
+      background: #111;
+      transform: translateY(-2px);
+    }
+
+    /* Status */
     #status {
       margin-top: 15px;
-      font-size: 14px;
-      opacity: 0.9;
+      font-size: 0.85rem;
+      color: #eee;
       white-space: pre-line;
     }
   </style>
@@ -50,17 +83,17 @@
 <body>
   <div class="card">
     <h2>Reset My Device</h2>
-    <p>This will completely erase your registration, pairs, and device locks from this website.</p>
-    <button onclick="clearAll()">Clear Everything</button>
+    <p>This will completely erase your registration, pairs, claims, submissions, reviews, and device locks from this website.</p>
+    <button class="btn btn-primary" onclick="clearAll()">Clear Everything</button>
     <p id="status"></p>
   </div>
 
   <script type="module">
     // ✅ Import Firebase
     import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
-    import { getFirestore, doc, getDoc, deleteDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
+    import { getFirestore, doc, deleteDoc, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-firestore.js";
 
-    // 🔑 Your Firebase config (replace with yours!)
+    // 🔑 Your Firebase config
     const firebaseConfig = {
       apiKey: "AIzaSyDRQUnCtIZSpq4Jxed_4lwy9LYup37009c",
       authDomain: "whatsapp-stuffs.firebaseapp.com",
@@ -92,19 +125,38 @@
         // Delete all pairs of this owner
         if (ownerPublicId) {
           const pairsCol = collection(db, "pairs");
-          const q1 = query(pairsCol, where("ownerPublicId", "==", ownerPublicId));
-          const snap1 = await getDocs(q1);
-          for (const s of snap1.docs) {
+          const pairsSnap = await getDocs(query(pairsCol, where("ownerPublicId", "==", ownerPublicId)));
+          for (const s of pairsSnap.docs) {
             await deleteDoc(doc(db, "pairs", s.id));
+          }
+
+          // Delete submissions
+          const submissionsCol = collection(db, "submissions");
+          const subSnap = await getDocs(query(submissionsCol, where("ownerPublicId", "==", ownerPublicId)));
+          for (const s of subSnap.docs) {
+            await deleteDoc(doc(db, "submissions", s.id));
+          }
+
+          // Delete reviews
+          const reviewsCol = collection(db, "reviews");
+          const revSnap = await getDocs(query(reviewsCol, where("ownerPublicId", "==", ownerPublicId)));
+          for (const s of revSnap.docs) {
+            await deleteDoc(doc(db, "reviews", s.id));
+          }
+
+          // Delete dailyCounts
+          const dailyCountsCol = collection(db, "dailyCounts");
+          const dcSnap = await getDocs(query(dailyCountsCol, where("ownerPublicId", "==", ownerPublicId)));
+          for (const s of dcSnap.docs) {
+            await deleteDoc(doc(db, "dailyCounts", s.id));
           }
         }
 
         // Delete claims linked to this device
         if (deviceId && ownerPublicId) {
           const claimsCol = collection(db, "claims");
-          const q2 = query(claimsCol, where("deviceId", "==", deviceId), where("ownerPublicId", "==", ownerPublicId));
-          const snap2 = await getDocs(q2);
-          for (const s of snap2.docs) {
+          const claimsSnap = await getDocs(query(claimsCol, where("deviceId", "==", deviceId), where("ownerPublicId", "==", ownerPublicId)));
+          for (const s of claimsSnap.docs) {
             await deleteDoc(doc(db, "claims", s.id));
           }
 
@@ -112,18 +164,14 @@
           await deleteDoc(doc(db, "deviceClaims", deviceId + "_" + ownerPublicId));
         }
 
-        // dailyCounts (best-effort, optional)
-        // Since dailyCounts are per day, we can’t know all IDs → optional cleanup skipped
-        // You can purge them manually if needed.
-
         // Clear browser storages
         localStorage.clear();
         sessionStorage.clear();
 
         if (window.indexedDB) {
           const dbs = await indexedDB.databases();
-          for (const db of dbs) {
-            if (db.name) indexedDB.deleteDatabase(db.name);
+          for (const d of dbs) {
+            if (d.name) indexedDB.deleteDatabase(d.name);
           }
         }
 
@@ -133,18 +181,20 @@
         }
 
         status.textContent = "✅ Everything cleared.\nThis device is no longer registered.";
+
+        // 🔄 Redirect after 1s
+        setTimeout(() => {
+          window.open('', '_self');
+          window.close();
+        }, 1000);
+
       } catch (e) {
         console.error(e);
         status.textContent = "❌ Error: " + e.message;
       }
     }
-    window.clearAll = clearAll;
-    status.textContent = "✅ Everything cleared.\nThis device is no longer registered.";
 
-// 🔄 Hard refresh after 1s
-    setTimeout(() => {
-      window.location.href = "owner.html"; 
-    }, 1000);
+    window.clearAll = clearAll;
   </script>
 </body>
 </html>
