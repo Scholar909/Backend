@@ -227,10 +227,19 @@ document.addEventListener("DOMContentLoaded", ()=>{
   const loggedIn = sessionStorage.getItem("loggedIn");
 
   if (whatsappParam) {
+    const locked = localStorage.getItem("ownerDevice");
+    if (locked && locked !== whatsappParam) {
+      alert("❌ Wrong owner link for this device");
+      window.close(); // try close directly
+      setTimeout(() => { window.location.href = "about:blank"; }, 500); // fallback if close fails
+      return;
+    }
+  
     getDoc(doc(db, "owners", whatsappParam)).then(snap => {
       if (!snap.exists()) {
         alert("Owner not found");
-        window.location.href = "/";
+        window.close();
+        setTimeout(() => { window.location.href = "about:blank"; }, 500);
         return;
       }
       const data = snap.data();
