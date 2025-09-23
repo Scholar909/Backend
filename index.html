@@ -7,8 +7,74 @@
   <title>Receive Link & Comment</title>
   <link rel="stylesheet" href="style.css">
   <meta name="viewport" content="width=device-width,initial-scale=1">
+  <style>
+    /* Pop-up styles */
+    .popup-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    .popup {
+      background: rgba(255,255,255,0.15);
+      backdrop-filter: blur(12px);
+      border-radius: 16px;
+      padding: 24px;
+      max-width: 600px;
+      width: 90%;
+      color: #fff;
+      text-align: center;
+      box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+      font-family: Arial, sans-serif;
+      animation: fadeIn 0.4s ease;
+    }
+    .popup h2 {
+      font-size: 22px;
+      margin-bottom: 16px;
+      color: #ffeb3b;
+    }
+    .popup p {
+      font-size: 16px;
+      margin-bottom: 12px;
+      line-height: 1.6;
+      font-weight: bold;
+    }
+    .popup button {
+      background: #0f4e75;
+      border: none;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      transition: background 0.3s;
+    }
+    .popup button:hover {
+      background: #0d3e5c;
+    }
+    @keyframes fadeIn {
+      from {opacity: 0;}
+      to {opacity: 1;}
+    }
+  </style>
 </head>
 <body>
+  <!-- Pop-up overlay -->
+  <div class="popup-overlay" id="instructionPopup" style="display:none;">
+    <div class="popup">
+      <h2>🚨 IMPORTANT INSTRUCTIONS 🚨</h2>
+      <p>As long as you are on this site, <strong style="color:orange;">you must follow these instructions</strong>:</p>
+      <p>👉 Watch the videos carefully and do exactly as shown.</p>
+      <p>👉 Copy the comment given, post it with 5 stars, then send your screenshots as proof.</p>
+      <p>⚠️ Ignore any other instructions you may have seen elsewhere. This is the official guide for this site.</p>
+      <button id="popupOkBtn">I Understand</button>
+    </div>
+  </div>
+
   <div class="container">
     <div class="header">
       <div class="logo">
@@ -122,5 +188,23 @@
   </div>
 
   <script type="module" src="public.js"></script>
+
+  <script>
+    // Show popup only if not shown in last 12 hours
+    const popup = document.getElementById("instructionPopup");
+    const okBtn = document.getElementById("popupOkBtn");
+    const lastShown = localStorage.getItem("popupLastShown");
+    const twelveHours = 12 * 60 * 60 * 1000; // 12 hrs in ms
+    const now = Date.now();
+
+    if (!lastShown || now - parseInt(lastShown) > twelveHours) {
+      popup.style.display = "flex";
+    }
+
+    okBtn.addEventListener("click", () => {
+      popup.style.display = "none";
+      localStorage.setItem("popupLastShown", Date.now().toString());
+    });
+  </script>
 </body>
 </html>
