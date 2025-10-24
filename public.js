@@ -59,7 +59,7 @@ async function claimPair(deviceId){
     const dSnap = await tx.get(dcRef);
     let count = 0;
     if(dSnap.exists()) count = dSnap.data().count || 0;
-    if(count >= 4) throw new Error("daily cap reached");
+    if(count >= 1) throw new Error("daily cap reached");
 
     // ✅ Only fetch this owner's pairs
     const q = query(pairsCol, where("ownerPublicId", "==", ownerPublicId));
