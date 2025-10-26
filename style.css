@@ -109,13 +109,14 @@ button, input, textarea {
 }
 
 .btn-primary {
-  background: #000;
+  background: #32cd32;
   color: #fff;
-  border: 1px solid #444;
+  height: 60px;
+  border: 2px solid #000;
 }
 
 .btn-primary:hover {
-  background: #111;
+  background: #ccc;
   transform: translateY(-2px);
 }
 
