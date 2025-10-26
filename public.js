@@ -105,7 +105,7 @@ function showPairToUser(data) {
   const link = data.link;
   const comment = data.comment;
   el("pair-link").href = link;
-  el("pair-link").textContent = "Open link to post (click me)";
+  el("pair-link").textContent = "Open link to post comment";
   el("pair-comment").textContent = comment;
   el("receive-slot").style.display = "block";
   const ownerWh = data.ownerWhatsApp || "";
