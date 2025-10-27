@@ -18,6 +18,16 @@ if (!ownerPublicId) {
   throw new Error("No ownerPublicId");
 }
 
+// List of owners who want change
+// 🌟 Owner-specific daily cap configuration
+const ownerDailyCaps = {
+  "nlc0ojwu": 1, // one per day
+  // Add more owners as needed
+};
+
+// Default is 2 per day, unless overridden
+const DAILY_CAP = ownerDailyCaps[ownerPublicId] || 2;
+
 // device id
 function ensureDeviceId(){
   let did = localStorage.getItem("collector_device_id");
@@ -59,7 +69,7 @@ async function claimPair(deviceId){
     const dSnap = await tx.get(dcRef);
     let count = 0;
     if(dSnap.exists()) count = dSnap.data().count || 0;
-    if(count >= 2) throw new Error("daily cap reached");
+    if(count >= DAILY_CAP) throw new Error("daily cap reached");
 
     // ✅ Only fetch this owner's pairs
     const q = query(pairsCol, where("ownerPublicId", "==", ownerPublicId));
