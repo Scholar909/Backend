@@ -21,7 +21,7 @@ if (!ownerPublicId) {
 // List of owners who want change
 // 🌟 Owner-specific daily cap configuration
 const ownerDailyCaps = {
-  "nlc0ojwu": 1,
+  "nlc0ojwu": 3,
   "l9t02pan": 1,// one per day
   // Add more owners as needed
 };
